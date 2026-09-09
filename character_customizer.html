@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grammar Vault — Character Creator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky-top:#57C3F5; --sky-mid:#8FDBFF; --sky-bot:#DFF6FF;
+  --ink:#2D3047; --ink-soft:#5C6B8A;
+  --panel:#FFFFFF;
+  --play:#4CD964; --play-dark:#2FAE49;
+  --opts:#7C5CFF; --opts-dark:#5B3FE0;
+  --quit:#FF6B6B; --quit-dark:#E14F4F;
+  --orange:#FF9F45; --orange-dark:#DB7D2C;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;min-height:100%;font-family:'Fredoka',sans-serif;}
+body{
+  background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 55%,var(--sky-bot) 100%);
+  min-height:100vh;
+  display:flex;justify-content:center;
+  padding:28px 16px 60px;
+  position:relative;
+  overflow-x:hidden;
+}
+/* decorative sun + clouds */
+.sun{position:fixed;top:-60px;right:-40px;width:220px;height:220px;border-radius:50%;
+  background:#FFD23F;box-shadow:0 0 90px 30px rgba(255,210,63,0.45);z-index:0;}
+.cloud{position:fixed;background:#fff;border-radius:50px;opacity:0.9;z-index:0;}
+.cloud::before,.cloud::after{content:'';position:absolute;background:#fff;border-radius:50%;}
+.c1{width:110px;height:40px;top:60px;left:6%;}
+.c1::before{width:56px;height:56px;top:-30px;left:14px;}
+.c1::after{width:44px;height:44px;top:-20px;left:60px;}
+.c2{width:90px;height:34px;top:140px;right:14%;}
+.c2::before{width:46px;height:46px;top:-24px;left:10px;}
+.c2::after{width:36px;height:36px;top:-16px;left:48px;}
+
+.wrap{position:relative;z-index:1;width:100%;max-width:1180px;}
+header{text-align:center;margin-bottom:22px;}
+header h1{
+  font:800 52px 'Baloo 2',sans-serif;color:#FF5D5D;
+  text-shadow:3px 3px 0 rgba(226,79,79,0.35);
+}
+header p{font:600 20px 'Fredoka',sans-serif;color:#3A6EA5;margin-top:6px;}
+
+.main-panel{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;justify-content:center;}
+
+.preview-card{
+  background:var(--panel);border:6px solid var(--ink);border-radius:28px;
+  box-shadow:0 10px 0 rgba(45,48,71,0.18);
+  padding:22px;width:340px;flex-shrink:0;
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+}
+.preview-stage{
+  width:280px;height:300px;border-radius:20px;
+  background:linear-gradient(180deg,#EAF6FF 0%,#D3EEFF 100%);
+  border:3px solid rgba(45,48,71,0.15);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+.preview-stage canvas{display:block;}
+.turn-row{display:flex;align-items:center;gap:14px;}
+.turn-btn{
+  width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;
+  background:var(--opts);color:#fff;font:700 20px 'Fredoka',sans-serif;
+  box-shadow:0 4px 0 var(--opts-dark);
+}
+.turn-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--opts-dark);}
+.turn-label{font:600 16px 'Fredoka',sans-serif;color:var(--ink-soft);}
+
+.name-tag{font:700 24px 'Baloo 2',sans-serif;color:var(--ink);}
+
+.options-card{
+  background:var(--panel);border:6px solid var(--ink);border-radius:28px;
+  box-shadow:0 10px 0 rgba(45,48,71,0.18);
+  padding:24px 26px;flex:1;min-width:320px;max-width:760px;
+  max-height:640px;overflow-y:auto;
+}
+.cat-section{margin-bottom:20px;}
+.cat-section:last-child{margin-bottom:0;}
+.cat-title{
+  font:700 22px 'Baloo 2',sans-serif;color:var(--ink);margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.swatch-row{display:flex;flex-wrap:wrap;gap:10px;}
+
+.swatch{
+  width:44px;height:44px;border-radius:50%;cursor:pointer;
+  border:4px solid rgba(45,48,71,0.15);
+  transition:transform .12s ease;
+  padding:0;
+}
+.swatch:hover{transform:scale(1.08);}
+.swatch.selected{border-color:var(--ink);transform:scale(1.12);box-shadow:0 0 0 3px #FFD23F;}
+
+.style-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  background:#F3FAFF;border:3px solid rgba(45,48,71,0.15);border-radius:16px;
+  padding:8px 10px 6px;cursor:pointer;min-width:74px;
+  transition:transform .12s ease,border-color .12s ease;
+}
+.style-btn:hover{transform:translateY(-2px);}
+.style-btn.selected{border-color:var(--opts);background:#ECE7FF;box-shadow:0 0 0 3px rgba(124,92,255,0.25);}
+.style-btn canvas{display:block;}
+.style-btn span{font:600 13px 'Fredoka',sans-serif;color:var(--ink);}
+
+.footer-actions{
+  display:flex;justify-content:center;gap:18px;margin-top:26px;flex-wrap:wrap;
+}
+.btn{
+  border:none;border-radius:50px;cursor:pointer;color:#fff;
+  font:700 22px 'Fredoka',sans-serif;padding:16px 30px;
+  display:flex;align-items:center;gap:10px;
+}
+.btn-randomize{background:var(--orange);box-shadow:0 6px 0 var(--orange-dark);width:100%;justify-content:center;}
+.btn-randomize:active{transform:translateY(4px);box-shadow:0 2px 0 var(--orange-dark);}
+.btn-back{background:var(--quit);box-shadow:0 6px 0 var(--quit-dark);}
+.btn-back:active{transform:translateY(4px);box-shadow:0 2px 0 var(--quit-dark);}
+.btn-save{background:var(--play);box-shadow:0 6px 0 var(--play-dark);}
+.btn-save:active{transform:translateY(4px);box-shadow:0 2px 0 var(--play-dark);}
+
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;padding:14px 26px;border-radius:16px;
+  font:600 18px 'Fredoka',sans-serif;opacity:0;transition:opacity .25s ease, transform .25s ease;
+  pointer-events:none;z-index:5;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media (max-width:760px){
+  .preview-card{width:100%;max-width:340px;}
+  .options-card{max-width:100%;}
+}
+</style>
+</head>
+<body>
+<div class="sun"></div>
+<div class="cloud c1"></div>
+<div class="cloud c2"></div>
+
+<div class="wrap">
+  <header>
+    <h1>&#127912; Design Your Character!</h1>
+    <p>Pick a hat, hair, colors, and more &mdash; make it yours!</p>
+  </header>
+
+  <div class="main-panel">
+    <div class="preview-card">
+      <div class="preview-stage">
+        <canvas id="preview" width="240" height="260"></canvas>
+      </div>
+      <div class="turn-row">
+        <button class="turn-btn" id="turnLeft">&#9664;</button>
+        <span class="turn-label">Turn</span>
+        <button class="turn-btn" id="turnRight">&#9654;</button>
+      </div>
+      <button class="btn btn-randomize" id="randomizeBtn">&#127922; Randomize</button>
+    </div>
+
+    <div class="options-card">
+      <div id="categories"></div>
+    </div>
+  </div>
+
+  <div class="footer-actions">
+    <button class="btn btn-back" id="backBtn">&#11013;&#65039; Back to Menu</button>
+    <button class="btn btn-save" id="saveBtn">&#128190; Save &amp; Play &#9654;</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">Saved!</div>
+
+<script src="character.js"></script>
+<script>
+let cfg = loadCharacter();
+let previewDir = 2;
+const previewCanvas = document.getElementById('preview');
+const pctx = previewCanvas.getContext('2d');
+let animFrame = 0, walking = false;
+
+function renderPreview(){
+  pctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
+  const T = 170;
+  const bob = Math.sin(Date.now()/260)*4;
+  drawCharacter(pctx, 35, 40, T, cfg, previewDir, animFrame, bob);
+}
+function tick(){
+  requestAnimationFrame(tick);
+  renderPreview();
+}
+tick();
+
+document.getElementById('turnLeft').addEventListener('click',()=>{
+  previewDir = (previewDir+1)%4; // cycle down->left->up->right->down (visual left turn)
+});
+document.getElementById('turnRight').addEventListener('click',()=>{
+  previewDir = (previewDir+3)%4;
+});
+
+/* ── Category definitions ── */
+const CATEGORIES = [
+  {key:'skin', label:'&#128075; Skin Tone', type:'color', palette:'skin'},
+  {key:'hairStyle', label:'&#9986;&#65039; Hair Style', type:'style', options:CHAR_HAIR_STYLES, labels:CHAR_HAIR_LABELS, previewKind:'hair'},
+  {key:'hair', label:'&#127752; Hair Color', type:'color', palette:'hair'},
+  {key:'outfit', label:'&#128085; Shirt Color', type:'color', palette:'outfit'},
+  {key:'pants', label:'&#128096; Pants Color', type:'color', palette:'pants'},
+  {key:'shoes', label:'&#128095; Shoe Color', type:'color', palette:'shoes'},
+  {key:'hat', label:'&#127913; Hat', type:'style', options:CHAR_HATS, labels:CHAR_HAT_LABELS, previewKind:'hat'},
+  {key:'hatColor', label:'&#127912; Hat Color', type:'color', palette:'hat'},
+  {key:'backpack', label:'&#127890; Backpack', type:'style', options:CHAR_BACKPACKS, labels:CHAR_BACKPACK_LABELS, previewKind:'backpack'},
+  {key:'backpackColor', label:'&#127912; Backpack Color', type:'color', palette:'backpack'},
+];
+
+function miniIcon(kind,value,color){
+  const c = document.createElement('canvas');
+  c.width=60;c.height=60;
+  const mctx = c.getContext('2d');
+  if(kind==='hair'){
+    if(value==='bald'){
+      mctx.fillStyle='#F7C99E';
+      mctx.beginPath();mctx.arc(30,32,18,0,Math.PI*2);mctx.fill();
+    } else {
+      mctx.fillStyle='#F7C99E';
+      mctx.beginPath();mctx.arc(30,32,18,0,Math.PI*2);mctx.fill();
+      drawHair(mctx,value,color,30,32,18,2,true);
+      drawHair(mctx,value,color,30,32,18,2,false);
+    }
+  } else if(kind==='hat'){
+    mctx.fillStyle='#F7C99E';
+    mctx.beginPath();mctx.arc(30,34,16,0,Math.PI*2);mctx.fill();
+    if(value!=='none') drawHat(mctx,value,color,30,34,16,2);
+  } else if(kind==='backpack'){
+    if(value==='none'){
+      mctx.strokeStyle='rgba(45,48,71,0.35)';mctx.lineWidth=3;mctx.setLineDash([5,4]);
+      chRoundRectPath(mctx,16,16,28,28,8);mctx.stroke();
+      mctx.setLineDash([]);
+    } else {
+      drawBackpack(mctx,value,color,60);
+    }
+  }
+  return c;
+}
+
+function buildUI(){
+  const root = document.getElementById('categories');
+  root.innerHTML='';
+  CATEGORIES.forEach(cat=>{
+    const section = document.createElement('div');
+    section.className='cat-section';
+    const h3 = document.createElement('div');
+    h3.className='cat-title';
+    h3.innerHTML=cat.label;
+    section.appendChild(h3);
+
+    const row = document.createElement('div');
+    row.className='swatch-row';
+
+    if(cat.type==='color'){
+      CHAR_PALETTE[cat.palette].forEach((color,i)=>{
+        const b = document.createElement('button');
+        b.className='swatch'+(cfg[cat.key]===i?' selected':'');
+        b.style.background=color;
+        b.title=color;
+        b.addEventListener('click',()=>{ cfg[cat.key]=i; refreshSelections(); });
+        row.appendChild(b);
+      });
+    } else {
+      cat.options.forEach(opt=>{
+        const b = document.createElement('button');
+        b.className='style-btn'+(cfg[cat.key]===opt?' selected':'');
+        const swatchColor = cat.key==='hat' ? CHAR_PALETTE.hat[cfg.hatColor]
+                            : cat.key==='backpack' ? CHAR_PALETTE.backpack[cfg.backpackColor]
+                            : CHAR_PALETTE.hair[cfg.hair];
+        const icon = miniIcon(cat.previewKind, opt, swatchColor);
+        b.appendChild(icon);
+        const lbl = document.createElement('span');
+        lbl.textContent = cat.labels[opt];
+        b.appendChild(lbl);
+        b.addEventListener('click',()=>{ cfg[cat.key]=opt; refreshSelections(); });
+        row.appendChild(b);
+      });
+    }
+    section.appendChild(row);
+    root.appendChild(section);
+  });
+}
+
+function refreshSelections(){
+  buildUI();
+}
+
+document.getElementById('randomizeBtn').addEventListener('click',()=>{
+  cfg = randomCharacter();
+  buildUI();
+  animFrame = (animFrame+1)%4;
+});
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1600);
+}
+
+document.getElementById('saveBtn').addEventListener('click',()=>{
+  saveCharacter(cfg);
+  window.location.href='grammar_vault.html';
+});
+document.getElementById('backBtn').addEventListener('click',()=>{
+  saveCharacter(cfg);
+  window.location.href='grammar_vault.html';
+});
+
+buildUI();
+</script>
+</body>
+</html>
